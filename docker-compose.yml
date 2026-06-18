@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  # Database Service
+  inventory-db:
+    image: postgres:16-alpine
+    container_name: inventory_postgres_db
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432" # Allows you to still connect via PGAdmin/DBeaver on localhost
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - inventory-network
+
+  # Microservice Service
+  inventory-service:
+    build:
+      context: . # Assumes docker-compose.yml is in the same folder as your Dockerfile. Adjust path if needed.
+      dockerfile: Dockerfile
+    container_name: enterprise_inventory_app
+    restart: on-failure
+    ports:
+      - "8080:8080"
+    networks:
+      - inventory-network
+    depends_on:
+      inventory-db:
+        condition: service_healthy
